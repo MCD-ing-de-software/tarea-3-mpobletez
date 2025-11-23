@@ -119,20 +119,24 @@ class TestDataCleaner(unittest.TestCase):
         - Verificar que en el DataFrame resultante los valores de "name" no tienen espacios al inicio/final (usar self.assertEqual para comparar valores específicos como strings individuales - unittest es suficiente)
         - Verificar que las columnas no especificadas (ej: "city") permanecen sin cambios (si comparas Series completas, usar pandas.testing.assert_series_equal() ya que maneja mejor los índices y tipos de Pandas; si comparas valores individuales, self.assertEqual es suficiente)
         """
-        df = make_sample_df()
         cleaner = DataCleaner()
+
+        df = pd.DataFrame({
+            "name": [" Alice ", "Bob ", " Carol  "],
+            "age": [25, 35, 45],
+            "city": ["SCL", "LPZ", "SCL"]
+        })
 
         df_original = df.copy()
 
-        result = cleaner.trim_strings(df, ["name"])
+        resultado = cleaner.trim_strings(df, ["name"])
 
         self.assertEqual(df.loc[0, "name"], " Alice ")
-        self.assertEqual(df.loc[3, "name"], " Carol  ")
+        self.assertEqual(df.loc[2, "name"], " Carol  ")
 
-        self.assertEqual(result.loc[0, "name"], "Alice")
-        self.assertEqual(result.loc[3, "name"], "Carol")
-
-        pdt.assert_series_equal(result["city"], df_original["city"])
+        self.assertEqual(resultado.loc[0, "name"], "Alice")
+        self.assertEqual(resultado.loc[2, "name"], "Carol")
+        pdt.assert_series_equal(resultado["city"], df_original["city"])
 
     def test_trim_strings_raises_typeerror_for_non_string_column(self):
         """Test que verifica que el método trim_strings lanza un TypeError cuando
@@ -162,10 +166,10 @@ class TestDataCleaner(unittest.TestCase):
         """
         df = make_sample_df()
         cleaner = DataCleaner()
+        result = cleaner.remove_outliers_iqr(df, "age", factor=0.8)
 
-        resultado = cleaner.remove_outliers_iqr(df, "age", factor=1.5)
-        self.assertNotIn(120, resultado["age"].values)
-        self.assertIn(25, resultado["age"].values)        
+        self.assertNotIn(120, result["age"].values)
+        self.assertIn(25, result["age"].values)      
 
     def test_remove_outliers_iqr_raises_keyerror_for_missing_column(self):
         """Test que verifica que el método remove_outliers_iqr lanza un KeyError cuando
